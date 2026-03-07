@@ -339,6 +339,7 @@ private struct StoredConnection: Codable {
     let sshUsername: String
     let sshAuthMethod: String
     let sshPrivateKeyPath: String
+    let sshAgentSocketPath: String
     let sshUseSSHConfig: Bool
 
     // SSL Configuration
@@ -377,6 +378,7 @@ private struct StoredConnection: Codable {
         self.sshUsername = connection.sshConfig.username
         self.sshAuthMethod = connection.sshConfig.authMethod.rawValue
         self.sshPrivateKeyPath = connection.sshConfig.privateKeyPath
+        self.sshAgentSocketPath = connection.sshConfig.agentSocketPath
         self.sshUseSSHConfig = connection.sshConfig.useSSHConfig
 
         // SSL Configuration
@@ -418,6 +420,7 @@ private struct StoredConnection: Codable {
         sshUsername = try container.decode(String.self, forKey: .sshUsername)
         sshAuthMethod = try container.decode(String.self, forKey: .sshAuthMethod)
         sshPrivateKeyPath = try container.decode(String.self, forKey: .sshPrivateKeyPath)
+        sshAgentSocketPath = try container.decodeIfPresent(String.self, forKey: .sshAgentSocketPath) ?? ""
         sshUseSSHConfig = try container.decode(Bool.self, forKey: .sshUseSSHConfig)
 
         // SSL Configuration (migration: use defaults if missing)
@@ -445,6 +448,7 @@ private struct StoredConnection: Codable {
             username: sshUsername,
             authMethod: SSHAuthMethod(rawValue: sshAuthMethod) ?? .password,
             privateKeyPath: sshPrivateKeyPath,
+            agentSocketPath: sshAgentSocketPath,
             useSSHConfig: sshUseSSHConfig
         )
 

@@ -117,6 +117,7 @@ actor SSHTunnelManager {
         privateKeyPath: String? = nil,
         keyPassphrase: String? = nil,
         sshPassword: String? = nil,
+        agentSocketPath: String? = nil,
         remoteHost: String,
         remotePort: Int
     ) async throws -> Int {
@@ -131,6 +132,22 @@ actor SSHTunnelManager {
         // Build SSH command
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
+
+        let fileManager = FileManager.default
+        let resolvedAgentSocketPath: String?
+
+        if let agentSocketPath,
+           !agentSocketPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let expandedAgentPath = expandPath(agentSocketPath)
+            guard fileManager.fileExists(atPath: expandedAgentPath) else {
+                throw SSHTunnelError.tunnelCreationFailed(
+                    String(localized: "SSH agent socket not found at: \(expandedAgentPath)")
+                )
+            }
+            resolvedAgentSocketPath = expandedAgentPath
+        } else {
+            resolvedAgentSocketPath = nil
+        }
 
         var arguments = [
             "-N",  // Don't execute remote command
@@ -153,7 +170,6 @@ actor SSHTunnelManager {
             let expandedPath = expandPath(keyPath)
 
             // Validate private key exists and is readable
-            let fileManager = FileManager.default
             guard fileManager.fileExists(atPath: expandedPath) else {
                 throw SSHTunnelError.tunnelCreationFailed("Private key file not found at: \(expandedPath)")
             }
@@ -173,6 +189,14 @@ actor SSHTunnelManager {
             arguments.append(contentsOf: ["-o", "PasswordAuthentication=yes"])
             arguments.append(contentsOf: ["-o", "PreferredAuthentications=password"])
             arguments.append(contentsOf: ["-o", "PubkeyAuthentication=no"])
+        case .agent:
+            arguments.append(contentsOf: ["-o", "PubkeyAuthentication=yes"])
+            arguments.append(contentsOf: ["-o", "PasswordAuthentication=no"])
+            arguments.append(contentsOf: ["-o", "PreferredAuthentications=publickey"])
+
+            if let resolvedAgentSocketPath {
+                arguments.append(contentsOf: ["-o", "IdentityAgent=\(resolvedAgentSocketPath)"])
+            }
         }
 
         arguments.append("\(sshUsername)@\(sshHost)")
@@ -188,11 +212,19 @@ actor SSHTunnelManager {
             askpassScriptPath = try createAskpassScript(password: password)
         }
 
+        var environment = ProcessInfo.processInfo.environment
+
         if let scriptPath = askpassScriptPath {
-            var environment = ProcessInfo.processInfo.environment
             environment["SSH_ASKPASS"] = scriptPath
             environment["SSH_ASKPASS_REQUIRE"] = "force"
             environment["DISPLAY"] = ":0"  // Required for SSH_ASKPASS to work
+        }
+
+        if let resolvedAgentSocketPath {
+            environment["SSH_AUTH_SOCK"] = resolvedAgentSocketPath
+        }
+
+        if askpassScriptPath != nil || resolvedAgentSocketPath != nil {
             process.environment = environment
         }
 

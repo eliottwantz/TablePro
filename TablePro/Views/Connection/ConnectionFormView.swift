@@ -42,6 +42,7 @@ struct ConnectionFormView: View {
     @State private var sshPassword: String = ""
     @State private var sshAuthMethod: SSHAuthMethod = .password
     @State private var sshPrivateKeyPath: String = ""
+    @State private var sshAgentSocketPath: String = ""
     @State private var keyPassphrase: String = ""
     @State private var sshConfigEntries: [SSHConfigEntry] = []
     @State private var selectedSSHConfigHost: String = ""
@@ -334,12 +335,12 @@ struct ConnectionFormView: View {
                 Section(String(localized: "Authentication")) {
                     Picker(String(localized: "Method"), selection: $sshAuthMethod) {
                         ForEach(SSHAuthMethod.allCases) { method in
-                            Text(method.rawValue).tag(method)
+                            Text(method.displayName).tag(method)
                         }
                     }
                     if sshAuthMethod == .password {
                         SecureField(String(localized: "Password"), text: $sshPassword)
-                    } else {
+                    } else if sshAuthMethod == .privateKey {
                         LabeledContent(String(localized: "Key File")) {
                             HStack {
                                 TextField("", text: $sshPrivateKeyPath, prompt: Text("~/.ssh/id_rsa"))
@@ -348,6 +349,27 @@ struct ConnectionFormView: View {
                             }
                         }
                         SecureField(String(localized: "Passphrase"), text: $keyPassphrase)
+                    } else {
+                        LabeledContent(String(localized: "Agent Socket")) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    TextField(
+                                        "",
+                                        text: $sshAgentSocketPath,
+                                        prompt: Text(SSHConfiguration.onePasswordAgentSocket)
+                                    )
+                                    Button(String(localized: "Browse")) { browseForAgentSocket() }
+                                        .controlSize(.small)
+                                    Button(String(localized: "1Password Default")) {
+                                        sshAgentSocketPath = SSHConfiguration.onePasswordAgentSocket
+                                    }
+                                    .controlSize(.small)
+                                }
+                                Text(String(localized: "Leave blank to use SSH_AUTH_SOCK from your environment."))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
             }
@@ -561,7 +583,15 @@ struct ConnectionFormView: View {
         let basicValid = !name.isEmpty && (type == .sqlite ? !database.isEmpty : true)
         if sshEnabled {
             let sshValid = !sshHost.isEmpty && !sshUsername.isEmpty
-            let authValid = sshAuthMethod == .password || !sshPrivateKeyPath.isEmpty
+            let authValid: Bool
+            switch sshAuthMethod {
+            case .password:
+                authValid = true
+            case .privateKey:
+                authValid = !sshPrivateKeyPath.isEmpty
+            case .agent:
+                authValid = true
+            }
             return basicValid && sshValid && authValid
         }
         return basicValid
@@ -602,6 +632,7 @@ struct ConnectionFormView: View {
             sshUsername = existing.sshConfig.username
             sshAuthMethod = existing.sshConfig.authMethod
             sshPrivateKeyPath = existing.sshConfig.privateKeyPath
+            sshAgentSocketPath = existing.sshConfig.agentSocketPath
 
             // Load SSL configuration
             sslMode = existing.sslConfig.mode
@@ -643,7 +674,8 @@ struct ConnectionFormView: View {
             port: Int(sshPort) ?? 22,
             username: sshUsername,
             authMethod: sshAuthMethod,
-            privateKeyPath: sshPrivateKeyPath,
+            privateKeyPath: sshAuthMethod == .privateKey ? sshPrivateKeyPath : "",
+            agentSocketPath: sshAuthMethod == .agent ? sshAgentSocketPath : "",
             useSSHConfig: !selectedSSHConfigHost.isEmpty
         )
 
@@ -743,7 +775,8 @@ struct ConnectionFormView: View {
             port: Int(sshPort) ?? 22,
             username: sshUsername,
             authMethod: sshAuthMethod,
-            privateKeyPath: sshPrivateKeyPath,
+            privateKeyPath: sshAuthMethod == .privateKey ? sshPrivateKeyPath : "",
+            agentSocketPath: sshAuthMethod == .agent ? sshAgentSocketPath : "",
             useSSHConfig: !selectedSSHConfigHost.isEmpty
         )
 
@@ -830,6 +863,25 @@ struct ConnectionFormView: View {
         panel.begin { response in
             if response == .OK, let url = panel.url {
                 sshPrivateKeyPath = url.path(percentEncoded: false)
+            }
+        }
+    }
+
+    private func browseForAgentSocket() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.showsHiddenFiles = true
+
+        let onePasswordDirectory = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Group Containers/2BUA8C4S2C.com.1password/t")
+        if FileManager.default.fileExists(atPath: onePasswordDirectory.path(percentEncoded: false)) {
+            panel.directoryURL = onePasswordDirectory
+        }
+
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                sshAgentSocketPath = url.path(percentEncoded: false)
             }
         }
     }

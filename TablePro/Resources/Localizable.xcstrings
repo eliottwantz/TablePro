@@ -8441,6 +8441,56 @@
         }
       }
     },
+    "SSH Agent" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent SSH"
+          }
+        }
+      }
+    },
+    "SSH agent socket not found at: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tìm thấy socket agent SSH tại: %@"
+          }
+        }
+      }
+    },
+    "Agent Socket" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Socket của agent"
+          }
+        }
+      }
+    },
+    "1Password Default" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mặc định 1Password"
+          }
+        }
+      }
+    },
+    "Leave blank to use SSH_AUTH_SOCK from your environment." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để trống để dùng SSH_AUTH_SOCK từ môi trường."
+          }
+        }
+      }
+    },
     "SSH Tunnel" : {
       "extractionState" : "stale",
       "localizations" : {

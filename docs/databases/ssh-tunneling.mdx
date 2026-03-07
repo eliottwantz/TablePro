@@ -81,7 +81,7 @@ flowchart LR
 
 ### Authentication Methods
 
-TablePro supports two SSH authentication methods:
+TablePro supports three SSH authentication methods:
 
 <Tabs>
   <Tab title="Password">
@@ -107,19 +107,30 @@ TablePro supports two SSH authentication methods:
     Click **Browse** to select your private key file. TablePro looks in `~/.ssh/` by default.
     </Tip>
   </Tab>
+  <Tab title="SSH Agent">
+    Use an existing SSH agent (e.g., 1Password or system `ssh-agent`):
+
+    | Field | Description |
+    |-------|-------------|
+    | **Agent Socket** | Path to the agent socket. Leave blank to use `SSH_AUTH_SOCK`. |
+
+    <Tip>
+    Click **1Password Default** to fill `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock`.
+    </Tip>
+  </Tab>
 </Tabs>
 
 {/* Screenshot: SSH authentication methods */}
-<Frame caption="SSH authentication: Password and Private Key options">
+<Frame caption="SSH authentication options">
   <img
     className="block dark:hidden"
     src="/images/ssh-auth-methods.png"
-    alt="SSH authentication methods"
+    alt="SSH authentication options"
   />
   <img
     className="hidden dark:block"
     src="/images/ssh-auth-methods-dark.png"
-    alt="SSH authentication methods"
+    alt="SSH authentication options"
   />
 </Frame>
 

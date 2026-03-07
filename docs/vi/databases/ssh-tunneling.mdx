@@ -81,7 +81,7 @@ flowchart LR
 
 ### Phương Thức Xác Thực
 
-TablePro hỗ trợ hai phương thức xác thực SSH:
+TablePro hỗ trợ ba phương thức xác thực SSH:
 
 <Tabs>
   <Tab title="Password">
@@ -107,19 +107,30 @@ TablePro hỗ trợ hai phương thức xác thực SSH:
     Nhấp **Browse** để chọn file private key. TablePro tìm trong `~/.ssh/` theo mặc định.
     </Tip>
   </Tab>
+  <Tab title="SSH Agent">
+    Dùng agent SSH sẵn có (ví dụ: 1Password hoặc `ssh-agent` của hệ thống):
+
+    | Field | Mô tả |
+    |-------|-------------|
+    | **Agent Socket** | Đường dẫn tới socket của agent. Để trống để dùng `SSH_AUTH_SOCK`. |
+
+    <Tip>
+    Nhấp **1Password Default** để điền `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock`.
+    </Tip>
+  </Tab>
 </Tabs>
 
 {/* Screenshot: Phương thức xác thực SSH */}
-<Frame caption="Xác thực SSH: Tùy chọn Mật khẩu và Private Key">
+<Frame caption="Xác thực SSH: các tùy chọn">
   <img
     className="block dark:hidden"
     src="/images/ssh-auth-methods.png"
-    alt="Phương thức xác thực SSH"
+    alt="Các tùy chọn xác thực SSH"
   />
   <img
     className="hidden dark:block"
     src="/images/ssh-auth-methods-dark.png"
-    alt="Phương thức xác thực SSH"
+    alt="Các tùy chọn xác thực SSH"
   />
 </Frame>
 
